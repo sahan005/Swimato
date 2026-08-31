@@ -1,0 +1,51 @@
+// Prisma schema for OrderWars
+// Structured for SQLite locally, with 1-line swap to PostgreSQL in production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  displayName  String
+  avatarEmoji  String     @default("🍕")
+  createdAt    DateTime   @default(now())
+  orders       Order[]
+  reactions    Reaction[]
+}
+
+model Order {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  String     // "ZOMATO" | "SWIGGY" | "LOCAL" | "OTHER"
+  amount    Float
+  note      String?
+  orderedAt DateTime   @default(now())
+  createdAt DateTime   @default(now())
+  reactions Reaction[]
+
+  @@index([userId])
+  @@index([orderedAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([orderId, userId, emoji])
+  @@index([orderId])
+}

@@ -1,26 +1,117 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-ink: #1B1B1B;
+    --color-paper: #F5F2EC;
+    --color-paper-light: #FAF8F5;
+    --color-paper-dark: #E6E0D4;
+    --color-chili: #C1432E;
+    --color-chili-dark: #A13320;
+    --color-turmeric: #E3A008;
+    --color-turmeric-light: #FDF2D2;
+    --color-betel: #5B6B4F;
+    --color-betel-light: #EBF0E6;
+    --color-muted: #737373;
+    --color-border: #DDD6C8;
+  }
+
+  body {
+    background-color: #121212;
+    color: var(--color-ink);
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Typography Utility Classes */
+.font-display {
+  font-family: var(--font-display), 'Barlow Condensed', 'Impact', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-mono-receipt {
+  font-family: var(--font-mono), 'Space Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-sans-ui {
+  font-family: var(--font-inter), sans-serif;
+}
+
+/* Receipt Edge Motifs */
+.receipt-perforated-top {
+  position: relative;
+}
+
+.receipt-perforated-top::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background-image: radial-gradient(circle at 10px -5px, transparent 10px, #F5F2EC 11px);
+  background-size: 20px 20px;
+  background-repeat: repeat-x;
+}
+
+.receipt-sawtooth-top {
+  clip-path: polygon(
+    0% 12px, 2% 0px, 4% 12px, 6% 0px, 8% 12px, 10% 0px, 12% 12px, 14% 0px, 16% 12px, 18% 0px, 20% 12px,
+    22% 0px, 24% 12px, 26% 0px, 28% 12px, 30% 0px, 32% 12px, 34% 0px, 36% 12px, 38% 0px, 40% 12px,
+    42% 0px, 44% 12px, 46% 0px, 48% 12px, 50% 0px, 52% 12px, 54% 0px, 56% 12px, 58% 0px, 60% 12px,
+    62% 0px, 64% 12px, 66% 0px, 68% 12px, 70% 0px, 72% 12px, 74% 0px, 76% 12px, 78% 0px, 80% 12px,
+    82% 0px, 84% 12px, 86% 0px, 88% 12px, 90% 0px, 92% 12px, 94% 0px, 96% 12px, 98% 0px, 100% 12px,
+    100% 100%, 0% 100%
+  );
+}
+
+.receipt-sawtooth-bottom {
+  clip-path: polygon(
+    0% 0%, 100% 0%, 100% calc(100% - 12px),
+    98% 100%, 96% calc(100% - 12px), 94% 100%, 92% calc(100% - 12px), 90% 100%, 88% calc(100% - 12px), 86% 100%, 84% calc(100% - 12px), 82% 100%, 80% calc(100% - 12px),
+    78% 100%, 76% calc(100% - 12px), 74% 100%, 72% calc(100% - 12px), 70% 100%, 68% calc(100% - 12px), 66% 100%, 64% calc(100% - 12px), 62% 100%, 60% calc(100% - 12px),
+    58% 100%, 56% calc(100% - 12px), 54% 100%, 52% calc(100% - 12px), 50% 100%, 48% calc(100% - 12px), 46% 100%, 44% calc(100% - 12px), 42% 100%, 40% calc(100% - 12px),
+    38% 100%, 36% calc(100% - 12px), 34% 100%, 32% calc(100% - 12px), 30% 100%, 28% calc(100% - 12px), 26% 100%, 24% calc(100% - 12px), 22% 100%, 20% calc(100% - 12px),
+    18% 100%, 16% calc(100% - 12px), 14% 100%, 12% calc(100% - 12px), 10% 100%, 8% calc(100% - 12px), 6% 100%, 4% calc(100% - 12px), 2% 100%, 0% calc(100% - 12px)
+  );
+}
+
+/* Dotted Thermal Line */
+.receipt-dotted-line {
+  border-bottom: 2px dashed #9e988c;
+}
+
+.receipt-double-line {
+  border-top: 3px double #1B1B1B;
+  border-bottom: 3px double #1B1B1B;
+  height: 8px;
+}
+
+/* Tactile Punch Button Keyframes */
+@keyframes punch-stamp {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.92) rotate(-1deg); }
+  65% { transform: scale(1.05) rotate(0.5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.animate-punch {
+  animation: punch-stamp 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes receipt-slide-down {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-receipt-print {
+  animation: receipt-slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
