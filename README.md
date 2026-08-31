@@ -1,123 +1,174 @@
-# 🧾 OrderWars — Friend-Group Food-Order Tracker & Leaderboard
+# Swimato (OrderWars)
 
-**OrderWars** is a full-stack web application designed for friend groups to track food delivery orders (Zomato, Swiggy, local takeaway, Blinkit/Instamart) and compete on a monthly canteen-style scoreboard.
-
-Built with a bespoke **canteen tally board & thermal receipt** visual identity — featuring tactile order punches, literal SVG tally marks, perforated receipt edges, and real-time friend feeds.
+A full-stack web application for tracking food delivery transactions, aggregate expenditure, and comparative monthly metrics across peer groups. Built with Next.js App Router, TypeScript, Prisma ORM, and PostgreSQL.
 
 ---
 
-## 🚀 Tech Stack
+## System Architecture
 
-- **Framework**: Next.js 15 (App Router, Turbopack, TypeScript)
-- **Database ORM**: Prisma ORM
-- **Database Engine**: SQLite locally (`dev.db`), 1-line swap to PostgreSQL in production (Neon / Supabase / Railway)
-- **Authentication**: Auth.js (NextAuth v5) Credentials Provider with bcrypt password hashing
-- **Styling**: Tailwind CSS with custom font tokens and thermal receipt motifs
-- **Typography**:
-  - `Barlow Condensed` (Google Font): Bold scoreboard numbers and headers
-  - `Space Mono` (Google Font): Monospace printed receipt totals and line items
-  - `Inter`: Clean humanist sans for user interactions
-- **Charts & Visuals**: Recharts (Platform breakdown pie chart, monthly spend distribution) & canvas-confetti
+The application is architected around server-side rendering and edge middleware routing, backed by an ORM data layer interfacing with a managed PostgreSQL instance.
 
----
-
-## 🎨 Design Palette
-
-- `#1B1B1B` **Ink** — Dark surface and printed text
-- `#F5F2EC` **Paper** — Thermal receipt cards and punchcard surfaces
-- `#C1432E` **Chili** — #1 Rank, hot streaks, tactile "+ Log an Order" punch button
-- `#E3A008` **Turmeric** — #2 / #3 Ranks, awards, and Big Spender badges
-- `#5B6B4F` **Betel** — Local deliveries and budget badges
+### Tech Stack
+- **Application Framework**: Next.js 16 (App Router, Turbopack, React 19)
+- **Language**: TypeScript 5
+- **ORM**: Prisma ORM 6
+- **Database Engine**: PostgreSQL (Supabase / Neon / AWS RDS) with PgBouncer connection pooling
+- **Authentication**: Auth.js (NextAuth v5) using JWT session strategy with bcrypt credential hashing
+- **Edge Layer**: Next.js Edge Middleware for route protection and lightweight token verification
+- **Styling**: Tailwind CSS 4 with custom design tokens
+- **Data Visualization**: Recharts (aggregation metrics, market share breakdown)
 
 ---
 
-## ⚡ Core Features
+## Data Model & Indexing
 
-1. **Auth & Instant Demo Accounts**:
-   - Secure sign-up and login with custom food avatar emoji picker.
-   - 1-tap demo logins for instant testing (`kandy`, `rohan`, `priya`, `arjun`).
-2. **< 10-Second Fast Order Logger**:
-   - Giant 1-tap platform selectors: **Zomato** 🍕, **Swiggy** 🍔, **Local** 🥡, **Other** 📦.
-   - Monospace numeric currency input (`₹`) auto-focused on launch.
-   - Quick date switcher (Today, Yesterday, Custom).
-   - Expandable note field.
-   - Tactile buzzer/punch animation with optimistic UI updates.
-3. **Centerpiece Thermal Receipt Leaderboard**:
-   - Perforated torn paper edge and dotted thermal separators.
-   - Giant scoreboard rank digits (`#1`, `#2`, `#3`) with medal badges.
-   - Dynamic monthly titles: **"Foodie of the Month"** (👑 #1 count) & **"Big Spender"** (💸 #1 spend).
-   - Literal SVG tally marks (5-stroke clusters with diagonal strike).
-   - Per-person platform breakdown chips (`🍕 Zomato: 4 · 🍔 Swiggy: 2 · 🥡 Local: 1`).
-   - Month dropdown archive & toggle between **Order Count** and **Amount Spent**.
-4. **Personal History & Management**:
-   - Quick stats: current rank, monthly spend, monthly count tally, and active daily streak record.
-   - Full edit and delete controls for personal orders.
-   - CSV export download.
-5. **Canteen Dispatch Wire (Live Feed)**:
-   - Live activity stream across all squad members with relative timestamps.
-   - Interactive emoji reactions (`🔥`, `🤤`, `💸`, `🍕`, `💀`, `❤️`) with live counts.
-6. **Hall of Fame & Analytics**:
-   - Monthly trophies archive.
-   - Interactive Recharts visualization for platform market share and squad member spend distribution.
+The relational schema is defined via Prisma (`prisma/schema.prisma`):
 
----
+```prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
 
-## 🛠️ Getting Started Locally
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  displayName  String
+  avatarEmoji  String     @default("🍕")
+  createdAt    DateTime   @default(now())
+  orders       Order[]
+  reactions    Reaction[]
+}
 
-### 1. Install dependencies
-```bash
-npm install
+model Order {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  String     // "ZOMATO" | "SWIGGY" | "LOCAL" | "OTHER"
+  amount    Float
+  note      String?
+  orderedAt DateTime   @default(now())
+  createdAt DateTime   @default(now())
+  reactions Reaction[]
+
+  @@index([userId])
+  @@index([orderedAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([orderId, userId, emoji])
+  @@index([orderId])
+}
 ```
 
-### 2. Configure Environment
-Create `.env` file:
-```env
-DATABASE_URL="file:./dev.db"
-AUTH_SECRET="orderwars-super-secret-jwt-key-2025-leaderboard"
-NEXTAUTH_URL="http://localhost:3000"
-```
-
-### 3. Push Database & Seed Demo Data
-```bash
-npx prisma db push
-npx prisma db seed
-```
-
-### 4. Run the Dev Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### Key Performance Indexes:
+- `Order(userId)`: Optimizes user-specific ledger queries and streak calculations.
+- `Order(orderedAt)`: Optimizes date-range aggregations for monthly leaderboards.
+- `Reaction(orderId, userId, emoji)`: Enforces unique constraint per reaction and accelerates batch reaction lookups.
 
 ---
 
-## 👥 Demo Logins
+## Authentication & Security Architecture
 
-| Username | Password | Avatar | Role |
+1. **Split Edge Runtime Configuration**:
+   - `src/lib/auth.config.ts`: Contains lightweight session verification rules executed within Vercel Edge Middleware (`src/middleware.ts`), strictly isolated from native Node.js binaries.
+   - `src/lib/auth.ts`: Houses credential authorization, password verification (`bcryptjs`), and database lookups (`PrismaClient`) on serverless Node.js endpoints.
+2. **Session Handling**: Stateless JSON Web Tokens (JWT) with HTTP-only, Secure cookie attributes.
+3. **Database Security**: Configured for Row Level Security (RLS) on PostgreSQL, with connection pooling via port 6543 (transaction mode) and direct migrations on port 5432 (session mode).
+
+---
+
+## API Specification
+
+| Endpoint | Method | Authentication | Description |
 | :--- | :--- | :--- | :--- |
-| `kandy` | `password123` | 🍛 | Foodie of the Month (#1 Count) |
-| `rohan` | `password123` | 🍕 | Big Spender (#1 Spend) |
-| `priya` | `password123` | 🍔 | Cafe & Dessert Enthusiast |
-| `arjun` | `password123` | 🥟 | Budget Master & Chai Addict |
+| `/api/register` | `POST` | Public | Registers a new user account with hashed credentials. |
+| `/api/auth/[...nextauth]` | `GET`, `POST` | Public | Auth.js session handling, login, and token exchange. |
+| `/api/orders` | `GET` | Required | Retrieves paginated orders filtered by month/year. |
+| `/api/orders` | `POST` | Required | Creates a new order entry for the authenticated user. |
+| `/api/orders/[id]` | `PUT` | Required | Updates an existing order owned by the user. |
+| `/api/orders/[id]` | `DELETE` | Required | Deletes an order owned by the user. |
+| `/api/orders/[id]/reactions` | `POST` | Required | Toggles an emoji reaction on a target order. |
+| `/api/leaderboard` | `GET` | Required | Computes aggregate spend, order count, and rankings. |
+| `/api/export` | `GET` | Required | Streams user order history as a formatted CSV file. |
 
 ---
 
-## 🌐 Production Deployment (Vercel + PostgreSQL)
+## Local Development Setup
 
-To deploy to Vercel with a managed Postgres instance (e.g. Neon, Supabase):
+### Prerequisites
+- Node.js 20+
+- npm / pnpm / yarn
+- PostgreSQL instance (or local SQLite during initial testing)
 
-1. In `prisma/schema.prisma`, update the datasource provider:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-2. In your Vercel Project Settings / Environment Variables:
-   - `DATABASE_URL`: `postgresql://user:pass@ep-xyz.aws.neon.tech/neondb?sslmode=require`
-   - `AUTH_SECRET`: Generate a random 32-character string (`openssl rand -base64 32`)
-   - `NEXTAUTH_URL`: `https://your-app.vercel.app`
-3. Set the build command in Vercel:
+### Installation
+
+1. Clone repository:
    ```bash
-   npx prisma db push && next build
+   git clone https://github.com/sahan005/Swimato.git
+   cd Swimato
    ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure environment variables in `.env`:
+   ```env
+   DATABASE_URL="postgresql://user:password@host:6543/postgres?pgbouncer=true"
+   DIRECT_URL="postgresql://user:password@host:5432/postgres"
+   AUTH_SECRET="generate-via-openssl-rand-base64-32"
+   NEXTAUTH_URL="http://localhost:3000"
+   ```
+
+4. Push database schema and seed initial dataset:
+   ```bash
+   npx prisma db push
+   npm run db:seed
+   ```
+
+5. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## Production Deployment
+
+### Vercel Deployment
+
+1. Import the repository into Vercel.
+2. Define the following Environment Variables in the project configuration:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `AUTH_SECRET`
+   - `NEXTAUTH_URL` (optional on Vercel preview/production deployments)
+3. Build command:
+   ```bash
+   next build
+   ```
+
+---
+
+## Seed Accounts (Testing)
+
+The default seed script initializes the following credentials for development environments:
+
+| Username | Password | Role / Dataset Profile |
+| :--- | :--- | :--- |
+| `kandy` | `password123` | Top volume contributor (Order count focus) |
+| `rohan` | `password123` | High ticket spender (Gross expenditure focus) |
+| `priya` | `password123` | Regular contributor (Balanced frequency) |
+| `arjun` | `password123` | Budget contributor (Local/Takeaway focus) |
