@@ -206,115 +206,131 @@ export function LeaderboardView({
 
         {/* Receipt Line Items */}
         <div className="divide-y divide-dashed divide-neutral-300">
-          {rankings.map((item, index) => {
-            const isTop1 = index === 0;
-            const isTop2 = index === 1;
-            const isTop3 = index === 2;
-            const isMe = item.user.id === currentUserId;
-
-            let rankBadge = `#${index + 1}`;
-            let rankColor = "text-[#1B1B1B]";
-            if (isTop1) {
-              rankBadge = "🥇 #1";
-              rankColor = "text-[#C1432E]";
-            } else if (isTop2) {
-              rankBadge = "🥈 #2";
-              rankColor = "text-[#E3A008]";
-            } else if (isTop3) {
-              rankBadge = "🥉 #3";
-              rankColor = "text-[#5B6B4F]";
-            }
-
-            return (
-              <div
-                key={item.user.id}
-                className={`grid grid-cols-12 px-4 sm:px-6 py-4 items-center transition-colors ${
-                  isMe ? "bg-amber-50/70" : "hover:bg-white/50"
-                }`}
+          {rankings.length === 0 ? (
+            <div className="py-12 px-6 text-center space-y-3">
+              <ShoppingBag className="w-10 h-10 mx-auto text-neutral-400" />
+              <p className="font-display font-bold text-lg text-neutral-700">No orders recorded for this month yet</p>
+              <p className="font-mono-receipt text-xs text-neutral-500 max-w-sm mx-auto">
+                Log your first food delivery order to start the monthly scoreboard!
+              </p>
+              <button
+                onClick={onOpenOrderModal}
+                className="mt-2 inline-flex items-center gap-2 bg-[#C1432E] hover:bg-[#A83824] text-white px-4 py-2 rounded-lg font-mono-receipt text-xs font-bold transition shadow-sm"
               >
-                {/* 1. Left: Big Condensed Scoreboard Rank */}
-                <div className="col-span-2 sm:col-span-1 flex flex-col items-center justify-center">
-                  <span className={`font-display font-black text-2xl sm:text-3xl leading-none ${rankColor}`}>
-                    {rankBadge}
-                  </span>
-                  {item.streakDays > 1 && (
-                    <span
-                      className="inline-flex items-center gap-0.5 text-[10px] font-mono-receipt text-orange-600 font-bold mt-1"
-                      title={`${item.streakDays} day order streak!`}
-                    >
-                      <Flame className="w-3 h-3 fill-orange-500 text-orange-500" />
-                      {item.streakDays}d
+                + LOG AN ORDER
+              </button>
+            </div>
+          ) : (
+            rankings.map((item, index) => {
+              const isTop1 = index === 0;
+              const isTop2 = index === 1;
+              const isTop3 = index === 2;
+              const isMe = item.user.id === currentUserId;
+
+              let rankBadge = `#${index + 1}`;
+              let rankColor = "text-[#1B1B1B]";
+              if (isTop1) {
+                rankBadge = "🥇 #1";
+                rankColor = "text-[#C1432E]";
+              } else if (isTop2) {
+                rankBadge = "🥈 #2";
+                rankColor = "text-[#E3A008]";
+              } else if (isTop3) {
+                rankBadge = "🥉 #3";
+                rankColor = "text-[#5B6B4F]";
+              }
+
+              return (
+                <div
+                  key={item.user.id}
+                  className={`grid grid-cols-12 px-4 sm:px-6 py-4 items-center transition-colors ${
+                    isMe ? "bg-amber-50/70" : "hover:bg-white/50"
+                  }`}
+                >
+                  {/* 1. Left: Big Condensed Scoreboard Rank */}
+                  <div className="col-span-2 sm:col-span-1 flex flex-col items-center justify-center">
+                    <span className={`font-display font-black text-2xl sm:text-3xl leading-none ${rankColor}`}>
+                      {rankBadge}
                     </span>
-                  )}
+                    {item.streakDays > 1 && (
+                      <span
+                        className="inline-flex items-center gap-0.5 text-[10px] font-mono-receipt text-orange-600 font-bold mt-1"
+                        title={`${item.streakDays} day order streak!`}
+                      >
+                        <Flame className="w-3 h-3 fill-orange-500 text-orange-500" />
+                        {item.streakDays}d
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 2. Middle: Name, Avatars, Titles, Platform Breakdown Chips */}
+                  <div className="col-span-6 sm:col-span-7 pl-2 sm:pl-3 pr-2 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xl sm:text-2xl flex-shrink-0">{item.user.avatarEmoji}</span>
+                      <span className="font-display font-black text-lg sm:text-2xl text-[#1B1B1B] truncate">
+                        {item.user.displayName}
+                      </span>
+                      {isMe && (
+                        <span className="text-[10px] bg-[#1B1B1B] text-white px-1.5 py-0.5 rounded font-mono-receipt uppercase">
+                          YOU
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Platform breakdown chips */}
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[11px] font-mono-receipt">
+                      {item.platforms.ZOMATO.count > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-100/80 text-red-800 border border-red-200">
+                          <span>🍕 Zomato:</span>
+                          <strong>{item.platforms.ZOMATO.count}</strong>
+                        </span>
+                      )}
+                      {item.platforms.SWIGGY.count > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-100/80 text-orange-800 border border-orange-200">
+                          <span>🍔 Swiggy:</span>
+                          <strong>{item.platforms.SWIGGY.count}</strong>
+                        </span>
+                      )}
+                      {item.platforms.LOCAL.count > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-stone-200/80 text-stone-800 border border-stone-300">
+                          <span>🥡 Local:</span>
+                          <strong>{item.platforms.LOCAL.count}</strong>
+                        </span>
+                      )}
+                      {item.platforms.OTHER.count > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neutral-200 text-neutral-800 border border-neutral-300">
+                          <span>📦 Other:</span>
+                          <strong>{item.platforms.OTHER.count}</strong>
+                        </span>
+                      )}
+                      {item.orderCount === 0 && (
+                        <span className="text-xs text-neutral-400 italic">No orders logged this month</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. Right: Literal Tally Marks & Total Amount */}
+                  <div className="col-span-4 sm:col-span-4 text-right flex flex-col items-end justify-center">
+                    {/* Total Amount Monospace */}
+                    <div className="font-mono-receipt font-black text-lg sm:text-2xl text-[#1B1B1B]">
+                      ₹{item.totalSpent.toLocaleString()}
+                    </div>
+
+                    {/* SVG Tally marks */}
+                    <div className="mt-1 flex items-center justify-end">
+                      <TallyMarks count={item.orderCount} color="#1B1B1B" />
+                    </div>
+
+                    {item.orderCount > 0 && (
+                      <span className="text-[10px] font-mono-receipt text-neutral-500 mt-0.5">
+                        Avg: ₹{item.averageOrderValue}/order
+                      </span>
+                    )}
+                  </div>
                 </div>
-
-                {/* 2. Middle: Name, Avatars, Titles, Platform Breakdown Chips */}
-                <div className="col-span-6 sm:col-span-7 pl-2 sm:pl-3 pr-2 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xl sm:text-2xl flex-shrink-0">{item.user.avatarEmoji}</span>
-                    <span className="font-display font-black text-lg sm:text-2xl text-[#1B1B1B] truncate">
-                      {item.user.displayName}
-                    </span>
-                    {isMe && (
-                      <span className="text-[10px] bg-[#1B1B1B] text-white px-1.5 py-0.5 rounded font-mono-receipt uppercase">
-                        YOU
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Platform breakdown chips */}
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap text-[11px] font-mono-receipt">
-                    {item.platforms.ZOMATO.count > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-100/80 text-red-800 border border-red-200">
-                        <span>🍕 Zomato:</span>
-                        <strong>{item.platforms.ZOMATO.count}</strong>
-                      </span>
-                    )}
-                    {item.platforms.SWIGGY.count > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-100/80 text-orange-800 border border-orange-200">
-                        <span>🍔 Swiggy:</span>
-                        <strong>{item.platforms.SWIGGY.count}</strong>
-                      </span>
-                    )}
-                    {item.platforms.LOCAL.count > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-stone-200/80 text-stone-800 border border-stone-300">
-                        <span>🥡 Local:</span>
-                        <strong>{item.platforms.LOCAL.count}</strong>
-                      </span>
-                    )}
-                    {item.platforms.OTHER.count > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neutral-200 text-neutral-800 border border-neutral-300">
-                        <span>📦 Other:</span>
-                        <strong>{item.platforms.OTHER.count}</strong>
-                      </span>
-                    )}
-                    {item.orderCount === 0 && (
-                      <span className="text-xs text-neutral-400 italic">No orders logged this month</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 3. Right: Literal Tally Marks & Total Amount */}
-                <div className="col-span-4 sm:col-span-4 text-right flex flex-col items-end justify-center">
-                  {/* Total Amount Monospace */}
-                  <div className="font-mono-receipt font-black text-lg sm:text-2xl text-[#1B1B1B]">
-                    ₹{item.totalSpent.toLocaleString()}
-                  </div>
-
-                  {/* SVG Tally marks */}
-                  <div className="mt-1 flex items-center justify-end">
-                    <TallyMarks count={item.orderCount} color="#1B1B1B" />
-                  </div>
-
-                  {item.orderCount > 0 && (
-                    <span className="text-[10px] font-mono-receipt text-neutral-500 mt-0.5">
-                      Avg: ₹{item.averageOrderValue}/order
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Receipt Bottom Summary / Barcode */}

@@ -132,10 +132,9 @@ model Reaction {
    NEXTAUTH_URL="http://localhost:3000"
    ```
 
-4. Push database schema and seed initial dataset:
+4. Push database schema:
    ```bash
    npx prisma db push
-   npm run db:seed
    ```
 
 5. Start the development server:
@@ -159,16 +158,3 @@ model Reaction {
    ```bash
    next build
    ```
-
----
-
-## Seed Accounts (Testing)
-
-The default seed script initializes the following credentials for development environments:
-
-| Username | Password | Role / Dataset Profile |
-| :--- | :--- | :--- |
-| `kandy` | `password123` | Top volume contributor (Order count focus) |
-| `rohan` | `password123` | High ticket spender (Gross expenditure focus) |
-| `priya` | `password123` | Regular contributor (Balanced frequency) |
-| `arjun` | `password123` | Budget contributor (Local/Takeaway focus) |

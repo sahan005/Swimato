@@ -17,29 +17,6 @@ export default function LoginPage() {
 
   const emojis = ["🍕", "🍔", "🍛", "🥟", "🍜", "🌮", "🍣", "🍦", "☕", "🍗"];
 
-  const handleDemoLogin = async (demoUsername: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await signIn("credentials", {
-        redirect: false,
-        username: demoUsername,
-        password: "password123",
-      });
-
-      if (res?.error) {
-        setError("Invalid demo credentials.");
-      } else {
-        router.push("/");
-        router.refresh();
-      }
-    } catch {
-      setError("An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -232,38 +209,6 @@ export default function LoginPage() {
                 ? "Already have an account? Sign In"
                 : "New around here? Create an Account"}
             </button>
-          </div>
-        </div>
-
-        {/* Demo Fast Logins for Testing */}
-        <div className="bg-[#1B1B1B] rounded-xl p-4 border border-neutral-800 space-y-3">
-          <p className="text-[11px] font-mono-receipt uppercase text-neutral-400 text-center">
-            ⚡ Quick Demo Accounts (1-Tap Sign In):
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { u: "kandy", name: "Kandy", emoji: "🍛", desc: "#1 Leader" },
-              { u: "rohan", name: "Rohan", emoji: "🍕", desc: "Big Spender" },
-              { u: "priya", name: "Priya", emoji: "🍔", desc: "Dessert Queen" },
-              { u: "arjun", name: "Arjun", emoji: "🥟", desc: "Budget Master" },
-            ].map((demo) => (
-              <button
-                key={demo.u}
-                onClick={() => handleDemoLogin(demo.u)}
-                disabled={isLoading}
-                className="p-2.5 rounded-lg bg-[#262626] hover:bg-[#333] border border-neutral-700 text-left transition flex items-center gap-2 group"
-              >
-                <span className="text-xl">{demo.emoji}</span>
-                <div className="min-w-0">
-                  <span className="block font-display font-black text-sm text-[#F5F2EC] group-hover:text-[#C1432E] transition-colors leading-tight">
-                    {demo.name}
-                  </span>
-                  <span className="text-[10px] font-mono-receipt text-neutral-400">
-                    {demo.desc}
-                  </span>
-                </div>
-              </button>
-            ))}
           </div>
         </div>
       </div>
